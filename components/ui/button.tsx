@@ -5,11 +5,12 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-full shadow-button',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-full',
   {
     variants: {
       variant: {
-        default: 'bg-primary text-white',
+        default: 'bg-primary text-white shadow-button',
+        disabled: 'bg-gray-200 text-gray-600',
       },
       size: {
         default: 'px-8 py-2',

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { FaRegImage, FaRegUserCircle } from 'react-icons/fa'
 import { CiCirclePlus } from 'react-icons/ci'
+import { MdOutlineDeleteForever } from 'react-icons/md'
 import moment from 'moment'
 
 const portofolioSchema = z.object({
@@ -85,9 +86,12 @@ function Create() {
     handleSubmit,
     control,
     trigger,
-    formState: { errors },
+    reset,
+    formState: { errors, isValid, isDirty },
   } = useForm<FormSchema>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(formSchema, undefined, {
+      raw: true
+    }),
     defaultValues: {
       portofolio: porto
     }
@@ -100,8 +104,10 @@ function Create() {
 
   const onSubmit: SubmitHandler<FormSchema> = (values: z.infer<typeof formSchema>) => {
     setData(values)
-    console.log('cok', values)
+    reset()
   }
+
+  const isSubmittable = !!isDirty && !!isValid;
 
   const handleChangeBackground = (e: ChangeEvent, onChange: any) => {
     const target = e.target as HTMLInputElement
@@ -340,69 +346,83 @@ function Create() {
               <Separator/>
 
               <div>
-                <div className='flex items-center justify-between'>
-                  <span className='block mb-2'>Portofolio</span>
-                  <CiCirclePlus className='h-6 w-6 text-primary cursor-pointer'
+                <div className='flex justify-between'>
+                  <h1 className='font-bold text-lg'>Add Your Portofolio</h1>
+                  <Button
                     onClick={() => {
-                      append({ position: '', company: '', start: new Date(), end: new Date(), description: '' });
-                      trigger('portofolio');
+                      append({ position: '', company: '', start: new Date(), end: new Date(), description: '' })
+                      trigger('portofolio')
                     }}
-                  />
+                    type='button'
+                  >
+                    <CiCirclePlus className='h-6 w-6 mr-2'/>
+                    Add More
+                  </Button>
                 </div>
-                <div className='space-y-8'>
+                <div className='space-y-8 mt-8'>
                   {
                     fields.map((field: any, index: number) => {
-                      const errorForField = errors?.portofolio?.[index]?.position
+                      const errorPosition = errors?.portofolio?.[index]?.position
+                      const errorCompany = errors?.portofolio?.[index]?.company
+                      const errorStart = errors?.portofolio?.[index]?.start
+                      const errorEnd = errors?.portofolio?.[index]?.end
+                      const errorDesc = errors?.portofolio?.[index]?.description
                       return (
-                        <div key={index} className='space-y-5'>
-                          <div>
-                            <Input
-                              variant='auth'
-                              placeholder='Position'
-                              className={errorForField?.message && 'border-red-500'}
-                              {...register(`portofolio.${index}.position` as const)}
-                            />
-                            <span className='block text-red-500'>{ errorForField?.message }</span>
+                        <div key={index}>
+                          <div className='flex items-center justify-between'>
+                            <span className='block mb-2'>Portofolio { index + 1 }</span>
+                            <MdOutlineDeleteForever onClick={() => remove(index)} className='h-6 w-auto text-red-600 cursor-pointer' />
                           </div>
-                          <div>
-                            <Input
-                              variant='auth'
-                              placeholder='Company'
-                              className={errorForField?.message && 'border-red-500'}
-                              {...register(`portofolio.${index}.company` as const)}
-                            />
-                            <span className='block text-red-500'>{ errorForField?.message }</span>
-                          </div>
-                          <div className='grid grid-cols-1 md:grid-cols-2 gap-5'>
+                          <div className='space-y-5'>
                             <div>
                               <Input
                                 variant='auth'
-                                type='date'
-                                placeholder='Start Date'
-                                className={errorForField?.message && 'border-red-500'}
-                                {...register(`portofolio.${index}.start` as const)}
+                                placeholder='Position'
+                                className={errorPosition?.message && 'border-red-500'}
+                                {...register(`portofolio.${index}.position` as const)}
                               />
-                              <span className='block text-red-500'>{ errorForField?.message }</span>
+                              <span className='block text-red-500'>{ errorPosition?.message }</span>
                             </div>
                             <div>
                               <Input
                                 variant='auth'
-                                type='date'
-                                placeholder='End Date'
-                                className={errorForField?.message && 'border-red-500'}
-                                {...register(`portofolio.${index}.end` as const)}
+                                placeholder='Company'
+                                className={errorCompany?.message && 'border-red-500'}
+                                {...register(`portofolio.${index}.company` as const)}
                               />
-                              <span className='block text-red-500'>{ errorForField?.message }</span>
+                              <span className='block text-red-500'>{ errorCompany?.message }</span>
                             </div>
-                          </div>
-                          <div>
-                            <Input
-                              variant='auth'
-                              placeholder='Description'
-                              className={errorForField?.message && 'border-red-500'}
-                              {...register(`portofolio.${index}.description` as const)}
-                            />
-                            <span className='block text-red-500'>{ errorForField?.message }</span>
+                            <div className='grid grid-cols-1 md:grid-cols-2 gap-5'>
+                              <div>
+                                <Input
+                                  variant='auth'
+                                  type='date'
+                                  placeholder='Start Date'
+                                  className={errorStart?.message && 'border-red-500'}
+                                  {...register(`portofolio.${index}.start` as const)}
+                                />
+                                <span className='block text-red-500'>{ errorStart?.message }</span>
+                              </div>
+                              <div>
+                                <Input
+                                  variant='auth'
+                                  type='date'
+                                  placeholder='End Date'
+                                  className={errorEnd?.message && 'border-red-500'}
+                                  {...register(`portofolio.${index}.end` as const)}
+                                />
+                                <span className='block text-red-500'>{ errorEnd?.message }</span>
+                              </div>
+                            </div>
+                            <div>
+                              <Input
+                                variant='auth'
+                                placeholder='Description'
+                                className={errorDesc?.message && 'border-red-500'}
+                                {...register(`portofolio.${index}.description` as const)}
+                              />
+                              <span className='block text-red-500'>{ errorDesc?.message }</span>
+                            </div>
                           </div>
                         </div>
                       )
@@ -413,7 +433,9 @@ function Create() {
             </div>
             <Button
               type='submit'
+              variant={!isSubmittable ? 'disabled' : 'default'}
               className='flex gap-3 w-full lg:w-fit'
+              disabled={!isSubmittable}
             >
               Save Changes
             </Button>
