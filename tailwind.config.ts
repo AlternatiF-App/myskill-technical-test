@@ -18,20 +18,13 @@ const config = {
       },
     },
     extend: {
-      keyframes: {
-        "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
-        },
-        "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
-        },
+      boxShadow: {
+        card: '0px 10px 20px 0px #1A143C1A',
+        button: '0px 10px 20px 0px #FF935780'
       },
-      animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
-      },
+      colors: {
+        primary: '#FF9357'
+      }
     },
   },
   plugins: [require("tailwindcss-animate")],
