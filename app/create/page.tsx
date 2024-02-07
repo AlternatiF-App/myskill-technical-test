@@ -68,6 +68,7 @@ function Create() {
   const router = useRouter()
   const [recent, setRecent] = useState<any>()
   const [porto, setPorto] = useState<Portofolio[]>(portofolioInitial)
+  const [isLoading, setIsLoading] = useState(true)
   const [data, setData] = useState<any>({
     background: undefined,
     profile: undefined,
@@ -109,6 +110,7 @@ function Create() {
   const getMyPortofolio = async () => {
     await axios.get('https://65c2eacef7e6ea59682bc798.mockapi.io/api/portofolio/1')
       .then((results) => {
+        setIsLoading(false)
         setData(results.data)
         setRecent(results.data)
         setPorto(results.data.portofolio)
@@ -116,6 +118,7 @@ function Create() {
       })
       .catch((error: any) => {
         console.log(error)
+        setIsLoading(false)
       })
   }
 
@@ -129,6 +132,7 @@ function Create() {
       setValue('portofolio', recent?.portofolio)
     } else {
       getMyPortofolio()
+      setValue('portofolio', porto)
     }
   }, [recent])
 
@@ -210,6 +214,15 @@ function Create() {
 
   const getPorto = (recent?.portofolio && !watch('portofolio')) ? recent?.portofolio : watch('portofolio')
   const filedsPorto = (recent?.portofolio && !fields) ? recent?.portofolio : fields
+
+
+  if (isLoading) {
+    return (
+      <div className='pt-72 animate-pulse pb-40 font-bold text-2xl text-center container mx-auto max-w-[850px] flex flex-col items-center'>
+        Checking Portofolio
+      </div>
+    )
+  }
 
   return (
     <main className='bg-gray-100'>

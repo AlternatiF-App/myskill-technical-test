@@ -23,11 +23,11 @@ function CardPortofolio({
       </span>
       <div className='mt-2 text-sm text-gray-400 flex items-center space-x-2'>
         <span className='block'>
-          { start?.toString() !== '' && moment(start).format('MMMM YYYY') }
+          { (start?.toString() !== '' && start !== undefined) && moment(start).format('MMMM YYYY') }
         </span>
         <span>{ end && '-' }</span>
         <span className='block'>
-          { end?.toString() !== '' && moment(end).format('MMMM YYYY') }
+          { (end?.toString() !== '' && end !== undefined) && moment(end).format('MMMM YYYY') }
         </span>
       </div>
 
