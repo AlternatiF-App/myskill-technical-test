@@ -71,33 +71,31 @@ const Footer = () => {
           </ul>
         </div>
         <div>
-          <div className='mt-2'>
-            <h4 className='text-base font-bold mt-6 leading-6 text-neutral-black letter tracking-wide'>
-              Follow Us
-            </h4>
-            <div className='flex items-center space-x-2 mt-[6px]'>
-              <Image
-                src='/icons/instagram-black.svg'
-                alt='instagram'
-                title='instagram'
-                height={24}
-                width={24}
-              />
-              <Image
-                src='icons/fb-black.svg'
-                alt='facebook'
-                title='facebook'
-                height={24}
-                width={24}
-              />
-              <Image
-                src='/icons/twitter-black.svg'
-                alt='twitter'
-                title='twitter'
-                height={24}
-                width={24}
-              />
-            </div>
+          <h4 className='text-base font-bold leading-6 text-neutral-black letter tracking-wide'>
+            Follow Us
+          </h4>
+          <div className='flex items-center space-x-2 mt-[6px]'>
+            <Image
+              src='/icons/instagram-black.svg'
+              alt='instagram'
+              title='instagram'
+              height={24}
+              width={24}
+            />
+            <Image
+              src='icons/fb-black.svg'
+              alt='facebook'
+              title='facebook'
+              height={24}
+              width={24}
+            />
+            <Image
+              src='/icons/twitter-black.svg'
+              alt='twitter'
+              title='twitter'
+              height={24}
+              width={24}
+            />
           </div>
         </div>
       </div>

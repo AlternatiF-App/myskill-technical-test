@@ -5,13 +5,16 @@ import { useForm, SubmitHandler, Controller, useFieldArray } from 'react-hook-fo
 import { z } from 'zod'
 import Image from 'next/image'
 import { FiPaperclip } from 'react-icons/fi'
-import { ChangeEvent, useState } from 'react'
+import { ChangeEvent, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { FaRegImage, FaRegUserCircle } from 'react-icons/fa'
 import { CiCirclePlus } from 'react-icons/ci'
 import { MdOutlineDeleteForever } from 'react-icons/md'
-import moment from 'moment'
+import axios from 'axios'
+import { resizeFile } from '@/lib/base64'
+import { useRouter } from 'next/navigation'
+import CardPortofolio from '@/components/molecules/card/card-portofolio'
 
 const portofolioSchema = z.object({
   position: z.string().min(2, {
@@ -20,8 +23,8 @@ const portofolioSchema = z.object({
   company: z.string().min(2, {
     message: 'Company must at least 2 character'
   }),
-  start: z.string().pipe(z.coerce.date()),
-  end: z.string().pipe(z.coerce.date()),
+  start: z.string().pipe(z.coerce.date()).optional(),
+  end: z.string().pipe(z.coerce.date()).optional(),
   description: z.string().min(2, {
     message: 'Description must at least 2 character'
   }),
@@ -58,12 +61,12 @@ type FormSchema = z.infer<typeof formSchema>;
 type Portofolio = z.infer<typeof formSchema>['portofolio'][number];
 
 const portofolioInitial: Portofolio[] = [
-  { position: '', company: '', start: new Date(), end: new Date(), description: '' },
+  { position: '', company: '', start: undefined, end: undefined, description: '' },
 ];
 
 function Create() {
-  const [uploadedBackground, setUploadedBackground] = useState<any>()
-  const [uploadedProfile, setUploadedProfile] = useState<any>()
+  const router = useRouter()
+  const [recent, setRecent] = useState<any>()
   const [porto, setPorto] = useState<Portofolio[]>(portofolioInitial)
   const [data, setData] = useState<any>({
     background: undefined,
@@ -85,16 +88,17 @@ function Create() {
     register,
     handleSubmit,
     control,
-    trigger,
     reset,
+    watch,
+    setValue,
     formState: { errors, isValid, isDirty },
   } = useForm<FormSchema>({
     resolver: zodResolver(formSchema, undefined, {
       raw: true
     }),
-    defaultValues: {
-      portofolio: porto
-    }
+    // defaultValues: recent ? recent : {
+    //   portofolio: porto
+    // }
   })
 
   const { fields, append, remove } = useFieldArray({
@@ -102,34 +106,75 @@ function Create() {
     name: 'portofolio'
   })
 
-  const onSubmit: SubmitHandler<FormSchema> = (values: z.infer<typeof formSchema>) => {
-    setData(values)
-    reset()
+  const getMyPortofolio = async () => {
+    await axios.get('https://65c2eacef7e6ea59682bc798.mockapi.io/api/portofolio/1')
+      .then((results) => {
+        setData(results.data)
+        setRecent(results.data)
+        setPorto(results.data.portofolio)
+        reset()
+      })
+      .catch((error: any) => {
+        console.log(error)
+      })
+  }
+
+  useEffect(() => {
+    if (recent) {
+      setValue('background', recent?.background)
+      setValue('profile', recent?.profile)
+      setValue('name', recent?.name)
+      setValue('position', recent?.position)
+      setValue('description', recent?.description)
+      setValue('portofolio', recent?.portofolio)
+    } else {
+      getMyPortofolio()
+    }
+  }, [recent])
+
+  const onSubmit: SubmitHandler<FormSchema> = async (values: z.infer<typeof formSchema>) => {
+    recent
+      ? await axios.put('https://65c2eacef7e6ea59682bc798.mockapi.io/api/portofolio/1', values)
+        .then(() => {
+          setData(values)
+          router.push('/my-portofolio')
+          reset()
+        })
+        .catch(() => {
+          alert('Please check your image, maximum size is 5Mb')
+        })
+      : await axios.post('https://65c2eacef7e6ea59682bc798.mockapi.io/api/portofolio', values)
+        .then(() => {
+          setData(values)
+          router.push('/my-portofolio')
+          reset()
+        })
+        .catch(() => {
+          alert('Please check your image, maximum size is 5Mb')
+        })
   }
 
   const isSubmittable = !!isDirty && !!isValid;
 
-  const handleChangeBackground = (e: ChangeEvent, onChange: any) => {
+  const handleChangeBackground = async (e: ChangeEvent, onChange: any) => {
     const target = e.target as HTMLInputElement
     const files = (target.files as FileList)[0]
-    setUploadedBackground(files);
 
     if (files) {
-      const imageUrl = URL.createObjectURL(files)
-      setData({ ...data ,background: imageUrl })
-      onChange(imageUrl)
+      const base64 = await resizeFile(files)
+      setData({ ...data ,background: base64 })
+      onChange(base64)
     }
   }
 
-  const handleChangeProfile = (e: ChangeEvent, onChange: any) => {
+  const handleChangeProfile = async (e: ChangeEvent, onChange: any) => {
     const target = e.target as HTMLInputElement
     const files = (target.files as FileList)[0]
-    setUploadedProfile(files);
 
     if (files) {
-      const imageUrl = URL.createObjectURL(files)
-      setData({ ...data, profile: imageUrl })
-      onChange(imageUrl)
+      const base64 = await resizeFile(files);
+      setData({ ...data, profile: base64 })
+      onChange(base64)
     }
   }
 
@@ -137,33 +182,34 @@ function Create() {
     e.preventDefault();
   }
 
-  const onBackgroundDrop = (e: any, onChange: any) => {
+  const onBackgroundDrop = async (e: any, onChange: any) => {
     e.stopPropagation();
     e.preventDefault()
 
     const files = e.dataTransfer.files[0]
 
     if (files) {
-      setUploadedBackground(files);
-      const imageUrl = URL.createObjectURL(files)
-      setData({ ...data, background: imageUrl })
-      onChange(imageUrl)
+      const base64 = await resizeFile(files);
+      setData({ ...data, background: base64 })
+      onChange(base64)
     }
   }
 
-  const onProfileDrop = (e: any, onChange: any) => {
+  const onProfileDrop = async (e: any, onChange: any) => {
     e.stopPropagation();
     e.preventDefault()
 
     const files = e.dataTransfer.files[0]
 
     if (files) {
-      setUploadedProfile(files);
-      const imageUrl = URL.createObjectURL(files)
-      setData({ ...data, profile: imageUrl })
-      onChange(imageUrl)
+      const base64 = await resizeFile(files);
+      setData({ ...data, profile: base64 })
+      onChange(base64)
     }
   }
+
+  const getPorto = (recent?.portofolio && !watch('portofolio')) ? recent?.portofolio : watch('portofolio')
+  const filedsPorto = (recent?.portofolio && !fields) ? recent?.portofolio : fields
 
   return (
     <main className='bg-gray-100'>
@@ -182,9 +228,9 @@ function Create() {
                     <span className='block mb-2'>Background Image</span>
                     <label htmlFor='background' className='relative cursor-pointer'>
                       {
-                        data.background && <Image
-                          data-background={data.background !== undefined}
-                          src={data.background}
+                        (data.background || recent?.background) && <Image
+                          data-background={data.background !== undefined || recent?.background !== undefined}
+                          src={(recent?.background !== undefined && !data.background) ? recent?.background : data.background}
                           id='image-upload'
                           alt='pict'
                           className='rounded-md h-[234px] w-full object-cover data-[background=false]:hidden data-[background=true]:block' 
@@ -193,10 +239,10 @@ function Create() {
                         />
                       }
                       <div
-                        data-background={data.background !== undefined}
+                        data-background={data.background !== undefined || recent?.background !== undefined}
                         className='h-[234px] w-full rounded-md bg-gray-100 data-[background=false]:block data-[background=true]:hidden'
                       />
-                      <div data-background={data.background !== undefined}
+                      <div data-background={data.background !== undefined || recent?.background !== undefined}
                         className='absolute top-1/3 inset-x-0 data-[background=false]:block data-[background=true]:hidden'>
                         <div className='flex flex-col justify-center items-center px-4'>
                           <FiPaperclip className='w-6 h-6'/>
@@ -205,10 +251,10 @@ function Create() {
                               Drag and drop files, or Browse
                             </span>
                             <span className='block text-center text-sm underline text-[#9F9F9F]'>
-                              Support formats : png, jpg, jpeg, mp4.
+                              Support formats : png, jpg, jpeg
                             </span>
                             <span className='block text-center text-sm underline text-[#9F9F9F]'>
-                              Max size : 500Mb
+                              Max size : 5Mb
                             </span>
                           </div>
                         </div>
@@ -221,8 +267,6 @@ function Create() {
                       onBlur={onBlur}
                       accept='image/png, image/jpeg, image/jpg'
                       onChange={(e: ChangeEvent) => handleChangeBackground(e, onChange)}
-                      // onDragOver={onDragOver}
-                      // onDrop={onFileDrop}
                       { ...register }
                     />
                   </div>
@@ -242,9 +286,9 @@ function Create() {
                     <span className='block mb-2'>Profile Image</span>
                     <label htmlFor='profile' className='relative cursor-pointer'>
                       {
-                        data.profile && <Image
-                          data-background={data.profile !== undefined}
-                          src={data.profile}
+                        (data.profile || recent?.profile) && <Image
+                          data-background={data.profile !== undefined || recent?.profile !== undefined}
+                          src={(recent?.profile && !data.profile) ? recent?.profile : data.profile}
                           id='image-upload'
                           alt='pict'
                           className='rounded-md h-[234px] w-full object-cover data-[background=false]:hidden data-[background=true]:block' 
@@ -253,10 +297,10 @@ function Create() {
                         />
                       }
                       <div
-                        data-background={data.profile !== undefined}
+                        data-background={data.profile !== undefined || recent?.profile !== undefined}
                         className='h-[234px] w-full rounded-md bg-gray-100 data-[background=false]:block data-[background=true]:hidden'
                       />
-                      <div data-background={data.profile !== undefined}
+                      <div data-background={data.profile !== undefined || recent?.profile !== undefined}
                         className='absolute top-1/3 inset-x-0 data-[background=false]:block data-[background=true]:hidden'>
                         <div className='flex flex-col justify-center items-center px-4'>
                           <FiPaperclip className='w-6 h-6'/>
@@ -265,10 +309,10 @@ function Create() {
                               Drag and drop files, or Browse
                             </span>
                             <span className='block text-center text-sm underline text-[#9F9F9F]'>
-                              Support formats : png, jpg, jpeg, mp4.
+                              Support formats : png, jpg, jpeg
                             </span>
                             <span className='block text-center text-sm underline text-[#9F9F9F]'>
-                              Max size : 500Mb
+                              Max size : 5Mb
                             </span>
                           </div>
                         </div>
@@ -300,6 +344,7 @@ function Create() {
                         <Input
                           variant='auth'
                           name={name}
+                          defaultValue={recent?.name && recent?.name}
                           placeholder='Name'
                           onChange={onChange}
                           className={errors.name?.message && 'border-red-500'}
@@ -317,6 +362,7 @@ function Create() {
                           variant='auth'
                           name={name}
                           placeholder='Position'
+                          defaultValue={recent?.position && recent?.position}
                           onChange={onChange}
                           className={errors.position?.message && 'border-red-500'}
                         />
@@ -333,6 +379,7 @@ function Create() {
                           variant='auth'
                           name={name}
                           placeholder='Description'
+                          defaultValue={recent?.description && recent?.description}
                           onChange={onChange}
                           className={errors.position?.message && 'border-red-500'}
                         />
@@ -349,10 +396,7 @@ function Create() {
                 <div className='flex justify-between'>
                   <h1 className='font-bold text-lg'>Add Your Portofolio</h1>
                   <Button
-                    onClick={() => {
-                      append({ position: '', company: '', start: new Date(), end: new Date(), description: '' })
-                      trigger('portofolio')
-                    }}
+                    onClick={() => append({ position: '', company: '', start: undefined, end: undefined, description: '' })}
                     type='button'
                   >
                     <CiCirclePlus className='h-6 w-6 mr-2'/>
@@ -361,7 +405,7 @@ function Create() {
                 </div>
                 <div className='space-y-8 mt-8'>
                   {
-                    fields.map((field: any, index: number) => {
+                    filedsPorto?.map((field: any, index: number) => {
                       const errorPosition = errors?.portofolio?.[index]?.position
                       const errorCompany = errors?.portofolio?.[index]?.company
                       const errorStart = errors?.portofolio?.[index]?.start
@@ -378,6 +422,7 @@ function Create() {
                               <Input
                                 variant='auth'
                                 placeholder='Position'
+                                defaultValue={recent?.portofolio && field.position}
                                 className={errorPosition?.message && 'border-red-500'}
                                 {...register(`portofolio.${index}.position` as const)}
                               />
@@ -387,6 +432,7 @@ function Create() {
                               <Input
                                 variant='auth'
                                 placeholder='Company'
+                                defaultValue={recent?.portofolio && field.company}
                                 className={errorCompany?.message && 'border-red-500'}
                                 {...register(`portofolio.${index}.company` as const)}
                               />
@@ -398,6 +444,7 @@ function Create() {
                                   variant='auth'
                                   type='date'
                                   placeholder='Start Date'
+                                  defaultValue={recent?.portofolio && field.start}
                                   className={errorStart?.message && 'border-red-500'}
                                   {...register(`portofolio.${index}.start` as const)}
                                 />
@@ -408,6 +455,7 @@ function Create() {
                                   variant='auth'
                                   type='date'
                                   placeholder='End Date'
+                                  defaultValue={recent?.portofolio && field.end}
                                   className={errorEnd?.message && 'border-red-500'}
                                   {...register(`portofolio.${index}.end` as const)}
                                 />
@@ -418,6 +466,7 @@ function Create() {
                               <Input
                                 variant='auth'
                                 placeholder='Description'
+                                defaultValue={recent?.portofolio && field.description}
                                 className={errorDesc?.message && 'border-red-500'}
                                 {...register(`portofolio.${index}.description` as const)}
                               />
@@ -433,9 +482,9 @@ function Create() {
             </div>
             <Button
               type='submit'
-              variant={!isSubmittable ? 'disabled' : 'default'}
+              // variant={!isSubmittable ? 'disabled' : 'default'}
               className='flex gap-3 w-full lg:w-fit'
-              disabled={!isSubmittable}
+              // disabled={!isSubmittable}
             >
               Save Changes
             </Button>
@@ -443,9 +492,9 @@ function Create() {
         </div>
         <div className='md:col-span-2 bg-white rounded-2xl shadow-card'>
           {
-            data.background 
+            (data.background || recent?.background) 
               ? <Image
-                  src={data.background}
+                  src={(recent?.background && !data.background) ? recent?.background : data.background}
                   alt='background'
                   height={0}
                   width={0}
@@ -457,9 +506,9 @@ function Create() {
           }
           <div className='flex justify-center -mt-14'>
             {
-              data.profile
+              (data.profile || recent?.profile)
                 ? <Image
-                    src={data.profile}
+                    src={(recent?.profile && !data.profile) ? recent?.profile : data.profile}
                     alt='profile'
                     height={0}
                     width={0}
@@ -473,13 +522,13 @@ function Create() {
           <div className='px-8 py-6'>
             <div className='flex flex-col items-center text-center'>
               <h1 className='font-bold text-xl'>
-                { data.name ? data.name : 'Name' }
+                { (recent?.name && !watch('name')) ? recent?.name : watch('name') ? watch('name') : 'Name' }
               </h1>
               <h2 className='font-light'>
-                { data.position ? data.position : 'Position' }
+                { (recent?.position && !watch('position')) ? recent?.position : watch('position') ? watch('position') : 'Position' }
               </h2>
               <span className='block font-light text-sm'>
-                { data.description ? data.description : 'Description' }
+                { (recent?.description && !watch('description')) ? recent?.description : watch('description') ? watch('description') : 'Description' }
               </span>
             </div>
             <div className='mt-8'>
@@ -488,28 +537,15 @@ function Create() {
               </h1>
               <div className='mt-4 space-y-8'>
                 {
-                  data.portofolio[0].position !== '' && data.portofolio.map((item: any, index: number) => (
-                    <figure key={index} className='p-4 rounded-md shadow-card bg-white'>
-                      <h1 className='font-bold'>
-                        { item.position }
-                      </h1>
-                      <span className='block leading-3 font-light text-sm'>
-                        { item.company }
-                      </span>
-                      <div className='mt-2 text-sm text-gray-400 flex items-center space-x-2'>
-                        <span className='block'>
-                          { moment(item.start).format('MMMM YYYY') }
-                        </span>
-                        <span>-</span>
-                        <span className='block'>
-                          { moment(item.start).format('MMMM YYYY') }
-                        </span>
-                      </div>
-
-                      <span className='block mt-2 text-justify text-sm font-light'>
-                        { item.description }
-                      </span>
-                    </figure>
+                  getPorto?.map((item: any, index: number) => (
+                    <CardPortofolio
+                      key={index}
+                      position={item.position}
+                      company={item.company}
+                      start={item.start}
+                      end={item.end}
+                      description={item.description}
+                    />
                   ))
                 }
               </div>

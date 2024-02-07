@@ -1,8 +1,8 @@
 'use client'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { useState } from 'react'
 import { HiOutlineMenu } from 'react-icons/hi'
+import { useState } from 'react'
 
 function Header() {
   const [menu, setMenu] = useState(false)
@@ -24,10 +24,10 @@ function Header() {
           <HiOutlineMenu onClick={() => setMenu(!menu)} className='h-6 w-6 block md:hidden' />
           <ul className='hidden md:flex items-center space-x-8'>
             <li className='font-semibold cursor-pointer hover:text-primary transition-colors duration-300 ease-in-out'>
-              <Link href='/my-portofolio'>
-                My Portofolio
-              </Link>
-            </li>
+                <Link href='/my-portofolio'>
+                  My Portofolio
+                </Link>
+              </li>
             <li>
               <Link href='/create'>
                 <Button>

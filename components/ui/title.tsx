@@ -31,7 +31,7 @@ function Title({
   title: string
   subtitle: string
   section: 'hero' | 'indicator' | '',
-  className: string
+  className?: string
 }) {
   return (
     <div
@@ -51,7 +51,6 @@ function Title({
 }
 
 Title.defaultProps = {
-  section: '',
-  className: ''
+  section: ''
 }
 export default Title
