@@ -15,50 +15,8 @@ import axios from 'axios'
 import { resizeFile } from '@/lib/base64'
 import { useRouter } from 'next/navigation'
 import CardPortofolio from '@/components/molecules/card/card-portofolio'
-
-const portofolioSchema = z.object({
-  position: z.string().min(2, {
-    message: 'Position must at least 2 character'
-  }),
-  company: z.string().min(2, {
-    message: 'Company must at least 2 character'
-  }),
-  start: z.string().pipe(z.coerce.date()).optional(),
-  end: z.string().pipe(z.coerce.date()).optional(),
-  description: z.string().min(2, {
-    message: 'Description must at least 2 character'
-  }),
-})
-
-const formSchema = z.object({
-  background: z.string({
-    required_error: 'Please insert your background image'
-  }),
-  profile: z.string({
-    required_error: 'Please insert your profile image'
-  }),
-  name: z.string({
-    required_error: 'Please insert your name'
-  }).min(2, {
-    message: 'Name must at lease 2 character'
-  }),
-  position: z.string({
-    required_error: 'Please insert your position'
-  }).min(2, {
-    message: 'Position must at lease 2 character'
-  }),
-  description: z.string({
-    required_error: 'Please insert your description'
-  }).min(2, {
-    message: 'Description must at lease 2 character'
-  }).max(300, {
-    message: 'Description max 300 character'
-  }),
-  portofolio: z.array(portofolioSchema)
-})
-
-type FormSchema = z.infer<typeof formSchema>;
-type Portofolio = z.infer<typeof formSchema>['portofolio'][number];
+import { formSchema, FormSchema, Portofolio } from '@/schema/schema'
+import { PortofolioProps } from '@/interface/interface'
 
 const portofolioInitial: Portofolio[] = [
   { position: '', company: '', start: undefined, end: undefined, description: '' },
@@ -81,6 +39,7 @@ function Create() {
         company: '',
         start: new Date(),
         end: new Date(),
+        description: '',
       }
     ]
   })
@@ -92,7 +51,7 @@ function Create() {
     reset,
     watch,
     setValue,
-    formState: { errors, isValid, isDirty },
+    formState: { errors },
   } = useForm<FormSchema>({
     resolver: zodResolver(formSchema, undefined, {
       raw: true
@@ -157,8 +116,6 @@ function Create() {
           alert('Please check your image, maximum size is 5Mb')
         })
   }
-
-  const isSubmittable = !!isDirty && !!isValid;
 
   const handleChangeBackground = async (e: ChangeEvent, onChange: any) => {
     const target = e.target as HTMLInputElement
@@ -418,7 +375,7 @@ function Create() {
                 </div>
                 <div className='space-y-8 mt-8'>
                   {
-                    filedsPorto?.map((field: any, index: number) => {
+                    filedsPorto?.map((field: PortofolioProps, index: number) => {
                       const errorPosition = errors?.portofolio?.[index]?.position
                       const errorCompany = errors?.portofolio?.[index]?.company
                       const errorStart = errors?.portofolio?.[index]?.start
@@ -495,9 +452,7 @@ function Create() {
             </div>
             <Button
               type='submit'
-              // variant={!isSubmittable ? 'disabled' : 'default'}
               className='flex gap-3 w-full lg:w-fit'
-              // disabled={!isSubmittable}
             >
               Save Changes
             </Button>
@@ -550,7 +505,7 @@ function Create() {
               </h1>
               <div className='mt-4 space-y-8'>
                 {
-                  getPorto?.map((item: any, index: number) => (
+                  getPorto?.map((item: PortofolioProps, index: number) => (
                     <CardPortofolio
                       key={index}
                       position={item.position}

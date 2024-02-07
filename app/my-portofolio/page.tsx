@@ -5,9 +5,10 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { DataProps } from '@/interface/interface'
 
 function MyPortofolio() {
-  const [data, setData] = useState<any>()
+  const [data, setData] = useState<DataProps>()
   const [isLoading, setIsLoading] = useState(true)
 
   const getMyPortofolio = async () => {
