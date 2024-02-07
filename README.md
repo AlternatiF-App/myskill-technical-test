@@ -1,10 +1,14 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+## Node Version 18.17.0
 
-## Getting Started
-
-First, run the development server:
+## Cara Menjalankan
 
 ```bash
+npm run install
+# or
+npm run i
+
+command diatas digunakan untuk instal dependency kemudian jalankan command dibawah untuk menjalankan project:
+
 npm run dev
 # or
 yarn dev
@@ -14,23 +18,27 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Dalam project ini ada 3 halaman utama, yaitu:
+- Landing Page     -> route('/')
+- My Portofolio    -> route('/my-portofolio')
+- Create           -> route('/create')
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Schema penyimpanan data
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+Disini saya menggunakan mockAPI untuk menyimpan dan menampilkan data.
 
-## Learn More
+## Alur penggunaan website
 
-To learn more about Next.js, take a look at the following resources:
+- User masuk pertama kali di halaman landing page. Dalam landing page user bisa menggunakan tombol pada hero untuk membuat portofolio atau bisa menggunakan navigation di header.
+- Halaman My Portofolio, jika user kehalaman ini sebelum membuat portofolionya maka akan muncul pesan agar membuat portofolio terlebih dahulu. Jika user sudah membuat maka disini user bisa melihat portofolio tanpa bisa mengubah data tersebut.
+- Halaman Create, disini user bisa membuat portofolionya. Jika user sudah membuat portofolio maka halaman ini akan bisa memperbarui data yang sudah dibuat oleh user tersebut.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Website ini dibuat untuk sekali pakai oleh user karena tidak ada login untuk membedakan user. Jadi jika data pada halaman Create dan My Portofolio sudah ada maka harus dihapus dulu di mockAPI
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+- endpoint : https://65c2eacef7e6ea59682bc798.mockapi.io/api/portofolio/:id
 
-## Deploy on Vercel
+Jika nantinya data sudah ada bisa dihapus melalui API diatas karena dalam website tidak ada fungsi clear data.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Desain
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Untuk halaman Create beberapa saya ubah untuk penataan card form nya untuk menjadi 1 agar effisien. Kemudian saya juga menambahkan halaman Landing Page dan My Portofolio untuk menambah kesan website yang siap pakai nantinya. Kemudian untuk tombol Simpan dan Tambah Array Portofolio saya ubah. Untuk Simpan saya taruh dibawah karena alur pengisian Form baiknya tombol dibawah untuk kontiniti penggunaan Form, jika diatas user akan keatas lagi untuk menyimpan data tersebut. Kemudian untuk Tambah Array saya taruh diatas seksi portofolio agar berdekatan dengan form portofolio tersebut.
